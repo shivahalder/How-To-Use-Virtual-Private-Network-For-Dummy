@@ -1,6 +1,6 @@
-# VPS Getting Started: Server Setup + Cloudflare + SSL
+# VPS Getting Started: Contabo + SSL
 
-A step-by-step guide to spinning up a VPS, connecting your domain through Cloudflare, and getting HTTPS working with a real SSL certificate.
+A step-by-step guide to spinning up a VPS on Contabo and getting your site running with HTTPS.
 
 > **Screenshots:** Create an `images/vps/` folder and save screenshots using the filenames referenced below.
 
@@ -9,15 +9,14 @@ A step-by-step guide to spinning up a VPS, connecting your domain through Cloudf
 ## Table of Contents
 
 1. [What is a VPS](#what-is-a-vps)
-2. [Choose a VPS Provider](#choose-a-vps-provider)
+2. [Contabo Plans](#contabo-plans)
 3. [Create Your Server](#create-your-server)
 4. [Connect to Your Server](#connect-to-your-server)
 5. [Initial Server Setup](#initial-server-setup)
 6. [Install a Web Server](#install-a-web-server)
-7. [Point Your Domain with Cloudflare](#point-your-domain-with-cloudflare)
+7. [Point Your Domain to the VPS](#point-your-domain-to-the-vps)
 8. [Install SSL with Let's Encrypt](#install-ssl-with-lets-encrypt)
-9. [Set Cloudflare SSL to Full (Strict)](#set-cloudflare-ssl-to-full-strict)
-10. [Test Everything](#test-everything)
+9. [Test Everything](#test-everything)
 
 ---
 
@@ -29,65 +28,65 @@ A **Virtual Private Server (VPS)** is a rented Linux server in the cloud. You ge
 
 ---
 
-## Choose a VPS Provider
+## Contabo Plans
 
-These are the most popular options for beginners on a budget:
+Contabo gives you far more specs per dollar than most providers.
 
-| Provider | Starting Price | Good For |
-|----------|---------------|----------|
-| **DigitalOcean** | ~$6/mo (Droplet) | Beginners, clean UI |
-| **Vultr** | ~$6/mo | Flexible locations |
-| **Linode (Akamai)** | ~$6/mo | Reliability |
-| **Hetzner** | ~€4/mo | Cheapest in EU |
-| **AWS Lightsail** | ~$3.50/mo | AWS ecosystem |
+| Plan | vCPU | RAM | Storage | Price |
+|------|------|-----|---------|-------|
+| **VPS S** | 4 vCPU | 8 GB | 100 GB NVMe | ~$7/mo |
+| **VPS M** | 6 vCPU | 16 GB | 200 GB NVMe | ~$14/mo |
+| **VPS L** | 8 vCPU | 30 GB | 400 GB NVMe | ~$27/mo |
 
-> For a personal site or small app, any $6/mo plan with **1 vCPU + 1GB RAM** is plenty to start.
+> **VPS S** is plenty for a personal site, small app, or game server. Most providers charge $40+/mo for the same specs.
+
+> **Note:** Contabo charges a one-time **setup fee** (~$5) on your first order. This is normal.
 
 ---
 
 ## Create Your Server
 
-Steps shown for **DigitalOcean** — other providers are nearly identical.
+1. Go to **contabo.com** and click **VPS** in the navigation
+2. Choose a plan — **VPS S** is enough to start
 
-1. Sign up and go to your dashboard
-2. Click **Create** → **Droplets**
+   ![Contabo VPS plan selection](images/vps/01-plan-selection.png)
 
-   ![Create Droplet button](images/vps/01-create-droplet.png)
-
-3. Choose a region close to your users
-4. Under **OS**, select **Ubuntu 24.04 LTS** (recommended)
+3. Choose a **region** — pick the one closest to your users (US, EU, Asia, etc.)
+4. Under **OS Image**, select **Ubuntu 24.04**
 
    ![Ubuntu OS selection](images/vps/02-os-selection.png)
 
-5. Choose a plan — **Basic / Regular / 1GB RAM** is fine for starters
-6. Under **Authentication**, choose **SSH Key** (more secure than password)
-   - If you don't have an SSH key yet, generate one:
-     ```bash
-     ssh-keygen -t ed25519 -C "your@email.com"
-     ```
-   - Copy your public key:
-     ```bash
-     # Windows
-     cat ~/.ssh/id_ed25519.pub | clip
+5. Under **SSH Keys**, add your public key — this is safer than using a password
 
-     # macOS
-     cat ~/.ssh/id_ed25519.pub | pbcopy
+   Generate an SSH key if you don't have one:
+   ```bash
+   ssh-keygen -t ed25519 -C "your@email.com"
+   ```
 
-     # Linux
-     cat ~/.ssh/id_ed25519.pub
-     ```
-   - Paste it into the SSH key field in the provider dashboard
+   Copy your public key:
+   ```bash
+   # Windows
+   cat ~/.ssh/id_ed25519.pub | clip
+
+   # macOS
+   cat ~/.ssh/id_ed25519.pub | pbcopy
+
+   # Linux
+   cat ~/.ssh/id_ed25519.pub
+   ```
+
+   Paste it into the SSH key field on the order page.
 
    ![SSH key input](images/vps/03-ssh-key.png)
 
-7. Give your server a hostname (e.g., `my-website`)
-8. Click **Create Droplet** — it takes about 30 seconds
+6. Complete checkout
+7. **Wait for the confirmation email** — Contabo can take a few hours to provision. The email will include your **server IP address** and root credentials.
 
 ---
 
 ## Connect to Your Server
 
-Once created, copy your server's **IP address** from the dashboard.
+Once you receive the confirmation email, connect using your IP address:
 
 ```bash
 ssh root@YOUR_SERVER_IP
@@ -104,7 +103,7 @@ Type `yes` when asked to confirm the fingerprint. You're now inside your server.
 
 ## Initial Server Setup
 
-Run these commands after your first login:
+Run these commands right after your first login.
 
 ### 1 — Update the system
 ```bash
@@ -122,7 +121,7 @@ usermod -aG sudo yourname
 rsync --archive --chown=yourname:yourname ~/.ssh /home/yourname
 ```
 
-### 4 — Test the new user in a separate terminal
+### 4 — Test the new user (open a separate terminal)
 ```bash
 ssh yourname@YOUR_SERVER_IP
 ```
@@ -143,7 +142,7 @@ Confirm with `y` when prompted.
 
 ## Install a Web Server
 
-### Option A — Nginx (recommended for most)
+### Option A — Nginx (recommended)
 
 ```bash
 sudo apt install nginx -y
@@ -151,7 +150,7 @@ sudo systemctl enable nginx
 sudo systemctl start nginx
 ```
 
-Test it by visiting `http://YOUR_SERVER_IP` in a browser — you should see the Nginx welcome page.
+Visit `http://YOUR_SERVER_IP` in a browser — you should see the Nginx welcome page.
 
 ### Option B — Apache
 
@@ -214,34 +213,16 @@ sudo systemctl reload nginx
 
 ---
 
-## Point Your Domain with Cloudflare
+## Point Your Domain to the VPS
 
-1. Go to your Cloudflare dashboard → your domain → **DNS** → **Records**
-2. Add an **A record** pointing to your server's IP:
+Go to wherever your domain's DNS is managed (your registrar, or any DNS provider) and add these records:
 
-   ```
-   Type:    A
-   Name:    @
-   Content: YOUR_SERVER_IP
-   Proxy:   DNS only (grey cloud) ← important during SSL setup
-   TTL:     Auto
-   ```
+```
+Type:  A      Name: @    Content: YOUR_SERVER_IP
+Type:  CNAME  Name: www  Content: example.com
+```
 
-3. Add a **www** record:
-
-   ```
-   Type:    CNAME
-   Name:    www
-   Content: example.com
-   Proxy:   DNS only (grey cloud)
-   TTL:     Auto
-   ```
-
-   ![DNS A record pointing to VPS](images/vps/04-dns-a-record.png)
-
-> Keep both records as **grey cloud (DNS only)** for now — Let's Encrypt needs to reach your server directly to issue the certificate. You'll switch to orange cloud after SSL is installed.
-
-Wait a few minutes for DNS to propagate, then verify with:
+Wait a few minutes for DNS to propagate, then verify:
 ```bash
 nslookup example.com 8.8.8.8
 ```
@@ -250,7 +231,7 @@ nslookup example.com 8.8.8.8
 
 ## Install SSL with Let's Encrypt
 
-Let's Encrypt gives you a free, trusted SSL certificate. Certbot automates the whole process.
+Let's Encrypt gives you a free, trusted SSL certificate. Certbot handles everything automatically.
 
 ### Install Certbot
 
@@ -265,7 +246,7 @@ sudo certbot --nginx -d example.com -d www.example.com
 ```
 
 Certbot will:
-- Verify you own the domain (via HTTP challenge)
+- Verify you own the domain
 - Issue the certificate
 - Automatically update your Nginx config for HTTPS
 
@@ -289,51 +270,22 @@ sudo certbot renew --dry-run
 
 ---
 
-## Set Cloudflare SSL to Full (Strict)
-
-Now that your server has a valid certificate, switch everything to Full (Strict) mode.
-
-### Step 1 — Turn the Cloudflare proxy back on
-
-In your Cloudflare DNS settings, click the grey cloud on both records to turn them **orange (proxied)**.
-
-### Step 2 — Set SSL mode to Full (Strict)
-
-1. Go to **SSL/TLS** → **Overview**
-2. Select **Full (Strict)**
-
-   ![SSL Full Strict mode](images/vps/05-ssl-full-strict.png)
-
-### Step 3 — Enable Always Use HTTPS
-
-1. Go to **SSL/TLS** → **Edge Certificates**
-2. Toggle **Always Use HTTPS** → On
-3. Toggle **Automatic HTTPS Rewrites** → On
-
----
-
 ## Test Everything
-
-Run through this checklist:
 
 - [ ] `http://example.com` redirects to `https://example.com`
 - [ ] `https://example.com` loads with a valid padlock in the browser
 - [ ] `https://www.example.com` also works
-- [ ] No mixed content warnings in browser DevTools (F12 → Console)
-- [ ] SSL certificate is from Cloudflare (check in browser padlock → Certificate)
+- [ ] No errors in browser DevTools (F12 → Console)
 
-### Check your cert expiry
+### Useful checks
 ```bash
+# Check cert status
 sudo certbot certificates
-```
 
-### Check Nginx is running
-```bash
+# Check Nginx is running
 sudo systemctl status nginx
-```
 
-### Check your firewall rules
-```bash
+# Check firewall rules
 sudo ufw status
 ```
 
@@ -351,9 +303,6 @@ sudo nginx -t
 # Renew SSL certificate manually
 sudo certbot renew
 
-# Check open ports
-sudo ufw status
-
 # View Nginx error logs
 sudo tail -f /var/log/nginx/error.log
 
@@ -367,7 +316,7 @@ sudo tail -f /var/log/nginx/access.log
 
 - **Deploy an app** — Node.js, Python, PHP behind Nginx as a reverse proxy
 - **Set up a database** — MySQL or PostgreSQL
-- **Add email** — Use a separate mail service (Mailgun, Resend, Google Workspace) rather than hosting your own
+- **Add email** — Use a mail service (Mailgun, Resend, Google Workspace) instead of hosting your own
 - **Harden your server** — Disable root SSH login, set up fail2ban
 
 ---
