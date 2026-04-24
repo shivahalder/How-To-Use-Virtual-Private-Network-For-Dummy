@@ -1,6 +1,6 @@
 # VPS Getting Started: Contabo + SSL
 
-A step-by-step guide to spinning up a VPS on Contabo and getting your site running with HTTPS.
+
 
 > **Screenshots:** Create an `images/vps/` folder and save screenshots using the filenames referenced below.
 
